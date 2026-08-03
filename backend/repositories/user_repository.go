@@ -47,3 +47,4 @@ func (r *UserRepository) UpdateUser(user *models.User) error {
 func (r *UserRepository) DeleteUser(id uint) error {
 	return database.DB.Delete(&models.User{}, id).Error
 }
+
