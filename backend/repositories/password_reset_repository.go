@@ -45,3 +45,10 @@ func (r *PasswordResetRepository) DeleteExpiredTokens() error {
 		Where("expires_at < ?", time.Now()).
 		Delete(&models.PasswordResetToken{}).Error
 }
+
+func (r *PasswordResetRepository) DeleteTokensByUserID(userID uint) error {
+
+	return database.DB.
+		Where("user_id = ?", userID).
+		Delete(&models.PasswordResetToken{}).Error
+}

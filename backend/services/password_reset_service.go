@@ -41,6 +41,12 @@ func (s *PasswordResetService) ForgotPassword(req dto.ForgotPasswordRequest) (st
 		return "", errors.New("user not found")
 	}
 
+	err = s.PasswordResetRepo.DeleteTokensByUserID(user.ID)
+
+	if err != nil {
+		return "", err
+	}
+
 	token, err := generateResetToken()
 
 	if err != nil {
