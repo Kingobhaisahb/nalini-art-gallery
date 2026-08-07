@@ -1,8 +1,12 @@
 package repositories
 
 import (
+
+	"errors"
 	"github.com/Kingobhaisahb/nalini-art-gallery/database"
     "github.com/Kingobhaisahb/nalini-art-gallery/models"
+	"gorm.io/gorm"
+
 )
 
 type UserRepository struct{}
@@ -20,6 +24,11 @@ func (r *UserRepository) GetUserByEmail(email string) (*models.User, error) {
 		First(&user).Error
 
 	if err != nil {
+
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
+
 		return nil, err
 	}
 

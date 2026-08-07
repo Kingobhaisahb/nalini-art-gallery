@@ -25,6 +25,10 @@ func AuthRoutes(router *gin.Engine) {
 		PasswordResetRepo: passwordResetRepo,
 	}
 
+	googleAuthService := services.GoogleAuthService{
+		UserRepo: userRepo,
+	}
+
 	// Controllers
 	authController := controllers.AuthController{
 		AuthService: authService,
@@ -32,6 +36,10 @@ func AuthRoutes(router *gin.Engine) {
 
 	passwordResetController := controllers.PasswordResetController{
 		PasswordResetService: passwordResetService,
+	}
+
+	googleAuthController := controllers.GoogleAuthController{
+		GoogleAuthService: googleAuthService,
 	}
 
 	// Public Routes
@@ -42,6 +50,8 @@ func AuthRoutes(router *gin.Engine) {
 
 		auth.POST("/forgot-password", passwordResetController.ForgotPassword)
 		auth.POST("/reset-password", passwordResetController.ResetPassword)
+
+		auth.POST("/google", googleAuthController.GoogleLogin)
 	}
 
 	// Protected Routes

@@ -37,3 +37,7 @@ type AuthResponse struct {
 	Token   string       `json:"token"`
 	User    UserResponse `json:"user"`
 }
+
+type GoogleLoginRequest struct {
+	IDToken string `json:"id_token" binding:"required"`
+}

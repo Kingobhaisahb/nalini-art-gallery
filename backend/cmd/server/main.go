@@ -1,5 +1,7 @@
 package main
 
+//go run cmd/server/main.go
+
 import (
 	"log"
 
@@ -30,3 +32,5 @@ func main() {
 
 	router.Run(":8080")
 }
+
+
