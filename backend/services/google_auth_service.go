@@ -19,6 +19,7 @@ type GoogleAuthService struct {
 
 func (s *GoogleAuthService) GoogleLogin(req dto.GoogleLoginRequest) (*dto.AuthResponse, error) {
 
+	// Verify the Google ID token
 	payload, err := idtoken.Validate(
 		context.Background(),
 		req.IDToken,
@@ -26,28 +27,40 @@ func (s *GoogleAuthService) GoogleLogin(req dto.GoogleLoginRequest) (*dto.AuthRe
 	)
 
 	if err != nil {
-		return nil, errors.New("invalid google token")
+		return nil, errors.New("invalid google authentication token")
 	}
 
+	// Extract email
 	email, ok := payload.Claims["email"].(string)
 
-	if !ok {
-		return nil, errors.New("email not found")
+	if !ok || email == "" {
+		return nil, errors.New("email not found in google account")
 	}
 
-	name, _ := payload.Claims["name"].(string)
-	googleID, _ := payload.Claims["sub"].(string)
+	// Make sure Google has verified the email
+	emailVerified, ok := payload.Claims["email_verified"].(bool)
 
+	if !ok || !emailVerified {
+		return nil, errors.New("google email is not verified")
+	}
+
+	// Extract Google user information
+	name, _ := payload.Claims["name"].(string)
+	googleID, ok := payload.Claims["sub"].(string)
+
+	if !ok || googleID == "" {
+		return nil, errors.New("google account ID not found")
+	}
+
+	// Find existing user using email
 	user, err := s.UserRepo.GetUserByEmail(email)
 
 	if err != nil {
-		return nil, err
+		return nil, errors.New("failed to check existing user")
 	}
 
-	// -----------------------------
-	// CASE 1
-	// New User
-	// -----------------------------
+	// CASE 1:
+	// User does not exist -> create a new Google user
 	if user == nil {
 
 		newUser := models.User{
@@ -61,18 +74,15 @@ func (s *GoogleAuthService) GoogleLogin(req dto.GoogleLoginRequest) (*dto.AuthRe
 		err = s.UserRepo.CreateUser(&newUser)
 
 		if err != nil {
-			return nil, err
+			return nil, errors.New("failed to create user")
 		}
 
 		user = &newUser
 
 	} else {
 
-		// -----------------------------
-		// CASE 2
-		// Existing LOCAL account
-		// -----------------------------
-
+		// CASE 2:
+		// User exists but Google is not linked yet
 		if user.GoogleID == nil {
 
 			user.GoogleID = &googleID
@@ -80,15 +90,21 @@ func (s *GoogleAuthService) GoogleLogin(req dto.GoogleLoginRequest) (*dto.AuthRe
 			err = s.UserRepo.UpdateUser(user)
 
 			if err != nil {
-				return nil, err
+				return nil, errors.New("failed to link google account")
+			}
+
+		} else {
+
+			// CASE 3:
+			// Google is already linked.
+			// Make sure it is the SAME Google account.
+			if *user.GoogleID != googleID {
+				return nil, errors.New("this email is already linked to another google account")
 			}
 		}
-
-		// CASE 3
-		// Google already linked
-		// Nothing to do.
 	}
 
+	// Generate our application's JWT
 	token, err := utils.GenerateJWT(
 		user.ID,
 		user.Email,
@@ -96,11 +112,10 @@ func (s *GoogleAuthService) GoogleLogin(req dto.GoogleLoginRequest) (*dto.AuthRe
 	)
 
 	if err != nil {
-		return nil, err
+		return nil, errors.New("failed to generate authentication token")
 	}
 
 	return &dto.AuthResponse{
-
 		Success: true,
 		Message: "Google login successful",
 		Token:   token,
