@@ -8,6 +8,7 @@ import (
 	"github.com/Kingobhaisahb/nalini-art-gallery/config"
 	"github.com/Kingobhaisahb/nalini-art-gallery/database"
 	"github.com/Kingobhaisahb/nalini-art-gallery/routes"
+	"github.com/gin-contrib/cors"
 
 	"github.com/gin-gonic/gin"
 )
@@ -19,6 +20,24 @@ func main() {
 	database.ConnectDatabase()
 
 	router := gin.Default()
+
+		router.Use(cors.New(cors.Config{
+		AllowOrigins: []string{
+			"http://localhost:5173",
+		},
+		AllowMethods: []string{
+			"GET",
+			"POST",
+			"PUT",
+			"DELETE",
+			"OPTIONS",
+		},
+		AllowHeaders: []string{
+			"Origin",
+			"Content-Type",
+			"Authorization",
+		},
+	}))
 
 	routes.AuthRoutes(router)
 
