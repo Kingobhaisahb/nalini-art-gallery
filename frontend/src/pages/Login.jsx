@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import axios from "axios";
 import { Link, useNavigate } from "react-router-dom";
 
@@ -9,6 +9,7 @@ function Login() {
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
 
+  const googleButtonRef = useRef(null);
   const navigate = useNavigate();
 
   const handleLogin = async (e) => {
@@ -41,6 +42,68 @@ function Login() {
       setLoading(false);
     }
   };
+
+  const handleGoogleLogin = async (response) => {
+  setMessage("Signing in with Google...");
+
+  try {
+    const result = await axios.post(
+      "http://localhost:8080/api/auth/google",
+      {
+        id_token: response.credential,
+      }
+    );
+
+    localStorage.setItem("token", result.data.token);
+
+    setMessage("Google login successful!");
+
+    navigate("/profile");
+  } catch (error) {
+    console.error(error);
+
+    if (error.response) {
+      setMessage(
+        error.response.data.message || "Google login failed"
+      );
+    } else {
+      setMessage("Could not connect to server");
+    }
+  }
+};
+
+useEffect(() => {
+  const initializeGoogle = () => {
+    if (!window.google || !googleButtonRef.current) {
+      return;
+    }
+
+    window.google.accounts.id.initialize({
+      client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID,
+      callback: handleGoogleLogin,
+    });
+
+    window.google.accounts.id.renderButton(
+      googleButtonRef.current,
+      {
+        theme: "outline",
+        size: "large",
+        text: "continue_with",
+        shape: "rectangular",
+        width: 250,
+      }
+    );
+  };
+
+  const interval = setInterval(() => {
+    if (window.google) {
+      initializeGoogle();
+      clearInterval(interval);
+    }
+  }, 100);
+
+  return () => clearInterval(interval);
+}, []);
 
   return (
     <div>
@@ -82,9 +145,7 @@ function Login() {
 
       <br />
 
-      <button>
-        Continue with Google
-      </button>
+      <div ref={googleButtonRef}></div>
 
       <p>{message}</p>
 
