@@ -24,15 +24,23 @@ func PaintingRoutes(router *gin.Engine) {
 		PaintingService: paintingService,
 	}
 
-	// Protected Painting Routes
-	paintings := router.Group("/api/paintings")
+	// Public Painting Routes
+	router.GET(
+		"/api/paintings",
+		paintingController.GetAllPaintings,
+	)
 
-	paintings.Use(
+	// Admin Painting Routes
+	adminPaintings := router.Group("/api/paintings")
+	adminPaintings.Use(
 		middleware.JWTMiddleware(),
 		middleware.AdminMiddleware(),
 	)
 
 	{
-		paintings.POST("", paintingController.CreatePainting)
+		adminPaintings.POST(
+			"",
+			paintingController.CreatePainting,
+		)
 	}
 }

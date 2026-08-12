@@ -48,3 +48,14 @@ func (s *PaintingService) CreatePainting(req dto.CreatePaintingRequest) (*models
 
 	return &painting, nil
 }
+
+func (s *PaintingService) GetAllPaintings() ([]models.Painting, error) {
+
+	paintings, err := s.PaintingRepo.GetAllPaintings()
+
+	if err != nil {
+		return nil, err
+	}
+
+	return paintings, nil
+}
