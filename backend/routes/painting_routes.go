@@ -30,8 +30,14 @@ func PaintingRoutes(router *gin.Engine) {
 		paintingController.GetAllPaintings,
 	)
 
+	router.GET(
+		"/api/paintings/:id",
+		paintingController.GetPaintingByID,
+	)
+
 	// Admin Painting Routes
 	adminPaintings := router.Group("/api/paintings")
+
 	adminPaintings.Use(
 		middleware.JWTMiddleware(),
 		middleware.AdminMiddleware(),
@@ -41,6 +47,11 @@ func PaintingRoutes(router *gin.Engine) {
 		adminPaintings.POST(
 			"",
 			paintingController.CreatePainting,
+		)
+
+		adminPaintings.PUT(
+			"/:id",
+			paintingController.UpdatePainting,
 		)
 	}
 }

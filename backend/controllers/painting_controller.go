@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"net/http"
+	"strconv"
 
 	"github.com/Kingobhaisahb/nalini-art-gallery/dto"
 	"github.com/Kingobhaisahb/nalini-art-gallery/services"
@@ -98,5 +99,113 @@ func (p *PaintingController) GetAllPaintings(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"success":   true,
 		"paintings": responses,
+	})
+}
+
+func (p *PaintingController) GetPaintingByID(c *gin.Context) {
+
+	idParam := c.Param("id")
+
+	id, err := strconv.ParseUint(idParam, 10, 64)
+
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"success": false,
+			"message": "Invalid painting ID",
+		})
+		return
+	}
+
+	painting, err := p.PaintingService.GetPaintingByID(uint(id))
+
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{
+			"success": false,
+			"message": "Painting not found",
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"success": true,
+		"painting": dto.PaintingResponse{
+			ID:              painting.ID,
+			Title:           painting.Title,
+			Price:           painting.Price,
+			Description:     painting.Description,
+			Category:        painting.Category,
+			Medium:          painting.Medium,
+			Width:           painting.Width,
+			Height:          painting.Height,
+			Unit:            painting.Unit,
+			Featured:        painting.Featured,
+			Status:          painting.Status,
+			Tags:            painting.Tags,
+			ProcessVideoURL:  painting.ProcessVideoURL,
+			Views:           painting.Views,
+			CreatedAt:       painting.CreatedAt.Format("2006-01-02 15:04:05"),
+			UpdatedAt:       painting.UpdatedAt.Format("2006-01-02 15:04:05"),
+		},
+	})
+}
+
+func (p *PaintingController) UpdatePainting(c *gin.Context) {
+
+	idParam := c.Param("id")
+
+	id, err := strconv.ParseUint(idParam, 10, 64)
+
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"success": false,
+			"message": "Invalid painting ID",
+		})
+		return
+	}
+
+	var req dto.UpdatePaintingRequest
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"success": false,
+			"message": err.Error(),
+		})
+		return
+	}
+
+	painting, err := p.PaintingService.UpdatePainting(
+		uint(id),
+		req,
+	)
+
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{
+			"success": false,
+			"message": "Painting not found",
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"success": true,
+		"message": "Painting updated successfully",
+		"painting": dto.PaintingResponse{
+			ID:              painting.ID,
+			Title:           painting.Title,
+			Price:           painting.Price,
+			Description:     painting.Description,
+			Category:        painting.Category,
+			Medium:          painting.Medium,
+			Width:           painting.Width,
+			Height:          painting.Height,
+			Unit:             painting.Unit,
+			Featured:        painting.Featured,
+			Status:          painting.Status,
+			Tags:             painting.Tags,
+			ProcessVideoURL: painting.ProcessVideoURL,
+			Views:            painting.Views,
+			CreatedAt:        painting.CreatedAt.Format("2006-01-02 15:04:05"),
+			UpdatedAt:        painting.UpdatedAt.Format("2006-01-02 15:04:05"),
+		},
 	})
 }

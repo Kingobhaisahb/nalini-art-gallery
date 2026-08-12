@@ -59,3 +59,57 @@ func (s *PaintingService) GetAllPaintings() ([]models.Painting, error) {
 
 	return paintings, nil
 }
+
+func (s *PaintingService) GetPaintingByID(id uint) (*models.Painting, error) {
+
+	painting, err := s.PaintingRepo.GetPaintingByID(id)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return painting, nil
+}
+
+func (s *PaintingService) UpdatePainting(
+	id uint,
+	req dto.UpdatePaintingRequest,
+) (*models.Painting, error) {
+
+	painting, err := s.PaintingRepo.GetPaintingByID(id)
+
+	if err != nil {
+		return nil, err
+	}
+
+	status := req.Status
+
+	if status == "" {
+		status = painting.Status
+	}
+
+	if status != "AVAILABLE" && status != "SOLD" {
+		return nil, errors.New("invalid painting status")
+	}
+
+	painting.Title = req.Title
+	painting.Price = req.Price
+	painting.Description = req.Description
+	painting.Category = req.Category
+	painting.Medium = req.Medium
+	painting.Width = req.Width
+	painting.Height = req.Height
+	painting.Unit = req.Unit
+	painting.Featured = req.Featured
+	painting.Status = status
+	painting.Tags = req.Tags
+	painting.ProcessVideoURL = req.ProcessVideoURL
+
+	err = s.PaintingRepo.UpdatePainting(painting)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return painting, nil
+}
