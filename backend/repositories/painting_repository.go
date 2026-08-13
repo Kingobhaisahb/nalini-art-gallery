@@ -3,6 +3,8 @@ package repositories
 import (
 	"github.com/Kingobhaisahb/nalini-art-gallery/database"
 	"github.com/Kingobhaisahb/nalini-art-gallery/models"
+
+	"gorm.io/gorm"
 )
 
 type PaintingRepository struct{}
@@ -47,4 +49,22 @@ func (r *PaintingRepository) UpdatePainting(painting *models.Painting) error {
 
 func (r *PaintingRepository) DeletePainting(id uint) error {
 	return database.DB.Delete(&models.Painting{}, id).Error
+}
+
+func (r *PaintingRepository) UpdateFeatured(id uint, featured bool) error {
+
+	result := database.DB.
+		Model(&models.Painting{}).
+		Where("id = ?", id).
+		Update("featured", featured)
+
+	if result.Error != nil {
+		return result.Error
+	}
+
+	if result.RowsAffected == 0 {
+		return gorm.ErrRecordNotFound
+	}
+
+	return nil
 }

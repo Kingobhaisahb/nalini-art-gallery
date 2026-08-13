@@ -63,3 +63,7 @@ type PaintingResponse struct {
 	CreatedAt string `json:"created_at"`
 	UpdatedAt string `json:"updated_at"`
 }
+
+type UpdateFeaturedRequest struct {
+	Featured bool `json:"featured"`
+}

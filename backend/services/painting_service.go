@@ -124,3 +124,8 @@ func (s *PaintingService) DeletePainting(id uint) error {
 
 	return nil
 }
+
+func (s *PaintingService) UpdateFeatured(id uint, featured bool) error {
+
+	return s.PaintingRepo.UpdateFeatured(id, featured)
+}
