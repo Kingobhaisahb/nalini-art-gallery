@@ -209,3 +209,33 @@ func (p *PaintingController) UpdatePainting(c *gin.Context) {
 		},
 	})
 }
+
+func (p *PaintingController) DeletePainting(c *gin.Context) {
+
+	idParam := c.Param("id")
+
+	id, err := strconv.ParseUint(idParam, 10, 32)
+
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"success": false,
+			"message": "Invalid painting ID",
+		})
+		return
+	}
+
+	err = p.PaintingService.DeletePainting(uint(id))
+
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"success": false,
+			"message": "Failed to delete painting",
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"success": true,
+		"message": "Painting deleted successfully",
+	})
+}

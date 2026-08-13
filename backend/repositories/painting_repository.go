@@ -44,3 +44,7 @@ func (r *PaintingRepository) UpdatePainting(painting *models.Painting) error {
 
 	return database.DB.Save(painting).Error
 }
+
+func (r *PaintingRepository) DeletePainting(id uint) error {
+	return database.DB.Delete(&models.Painting{}, id).Error
+}

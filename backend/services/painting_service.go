@@ -113,3 +113,14 @@ func (s *PaintingService) UpdatePainting(
 
 	return painting, nil
 }
+
+func (s *PaintingService) DeletePainting(id uint) error {
+
+	err := s.PaintingRepo.DeletePainting(id)
+
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
