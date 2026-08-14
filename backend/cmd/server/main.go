@@ -41,6 +41,7 @@ func main() {
 
 	routes.AuthRoutes(router)
 	routes.PaintingRoutes(router)
+	routes.PaintingImageRoutes(router)
 
 	router.GET("/", func(c *gin.Context) {
 		c.JSON(200, gin.H{
