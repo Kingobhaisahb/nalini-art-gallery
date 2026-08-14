@@ -129,3 +129,12 @@ func (s *PaintingService) UpdateFeatured(id uint, featured bool) error {
 
 	return s.PaintingRepo.UpdateFeatured(id, featured)
 }
+
+func (s *PaintingService) UpdateStatus(id uint, status string) error {
+
+	if status != "AVAILABLE" && status != "SOLD" {
+		return errors.New("invalid painting status")
+	}
+
+	return s.PaintingRepo.UpdateStatus(id, status)
+}

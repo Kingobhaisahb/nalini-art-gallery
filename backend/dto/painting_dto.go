@@ -67,3 +67,7 @@ type PaintingResponse struct {
 type UpdateFeaturedRequest struct {
 	Featured bool `json:"featured"`
 }
+
+type UpdatePaintingStatusRequest struct {
+	Status string `json:"status" binding:"required,oneof=AVAILABLE SOLD"`
+}

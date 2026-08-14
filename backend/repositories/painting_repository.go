@@ -68,3 +68,21 @@ func (r *PaintingRepository) UpdateFeatured(id uint, featured bool) error {
 
 	return nil
 }
+
+func (r *PaintingRepository) UpdateStatus(id uint, status string) error {
+
+	result := database.DB.
+		Model(&models.Painting{}).
+		Where("id = ?", id).
+		Update("status", status)
+
+	if result.Error != nil {
+		return result.Error
+	}
+
+	if result.RowsAffected == 0 {
+		return gorm.ErrRecordNotFound
+	}
+
+	return nil
+}

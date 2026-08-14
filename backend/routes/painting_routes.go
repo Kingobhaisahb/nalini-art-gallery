@@ -63,5 +63,10 @@ func PaintingRoutes(router *gin.Engine) {
 			"/:id/featured",
 			paintingController.UpdateFeatured,
 		)
+
+		adminPaintings.PATCH(
+			"/:id/status",
+			paintingController.UpdateStatus,
+		)
 	}
 }
