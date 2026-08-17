@@ -17,6 +17,14 @@ func main() {
 
 	config.LoadEnv()
 
+	cld, err := config.GetCloudinary()
+
+	if err != nil {
+		log.Fatal("Cloudinary configuration failed:", err)
+	}
+
+	log.Println("Cloudinary configured successfully:", cld)
+
 	database.ConnectDatabase()
 
 	router := gin.Default()
