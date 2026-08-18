@@ -45,7 +45,8 @@ func (p *PaintingImageController) UploadImage(c *gin.Context) {
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"success": false,
-			"message": "Failed to open image",
+			"message": "Failed to upload image",
+			"error":   err.Error(),
 		})
 		return
 	}
@@ -71,6 +72,7 @@ func (p *PaintingImageController) UploadImage(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"success": false,
 			"message": "Failed to upload image",
+			"error":   err.Error(),
 		})
 		return
 	}

@@ -3,6 +3,8 @@ package services
 import (
 	"context"
 	"errors"
+	"io"
+	"fmt"
 
 	"github.com/Kingobhaisahb/nalini-art-gallery/config"
 	"github.com/Kingobhaisahb/nalini-art-gallery/models"
@@ -18,7 +20,7 @@ type PaintingImageService struct {
 
 func (s *PaintingImageService) UploadImage(
 	paintingID uint,
-	file interface{},
+	file io.Reader,
 ) (*models.PaintingImage, error) {
 
 	// First check that the painting exists
@@ -44,8 +46,16 @@ func (s *PaintingImageService) UploadImage(
 		},
 	)
 
+	fmt.Printf("Cloudinary result: %+v\n", result)
+	fmt.Printf("Cloudinary error: %v\n", err)
+
 	if err != nil {
 		return nil, err
+	}
+
+	// Check Cloudinary response
+	if result.SecureURL == "" {
+		return nil, errors.New("cloudinary upload returned an empty URL")
 	}
 
 	// Create database record
