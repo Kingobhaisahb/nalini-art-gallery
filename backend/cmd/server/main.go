@@ -17,13 +17,13 @@ func main() {
 
 	config.LoadEnv()
 
-	cld, err := config.GetCloudinary()
+	_, err := config.GetCloudinary()
 
 	if err != nil {
 		log.Fatal("Cloudinary configuration failed:", err)
 	}
 
-	log.Println("Cloudinary configured successfully:", cld)
+	log.Println("Cloudinary configured successfully")
 
 	database.ConnectDatabase()
 
@@ -50,6 +50,7 @@ func main() {
 	routes.AuthRoutes(router)
 	routes.PaintingRoutes(router)
 	routes.PaintingImageRoutes(router)
+	routes.PaintingVideoRoutes(router)
 
 	router.GET("/", func(c *gin.Context) {
 		c.JSON(200, gin.H{
