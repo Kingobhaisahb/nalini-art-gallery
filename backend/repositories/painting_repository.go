@@ -161,3 +161,12 @@ func (r *PaintingRepository) GetNewestPaintings() ([]models.Painting, error) {
 
 	return paintings, nil
 }
+
+func (r *PaintingRepository) IncrementViews(id uint) error {
+
+	return database.DB.
+		Model(&models.Painting{}).
+		Where("id = ?", id).
+		UpdateColumn("views", gorm.Expr("views + ?", 1)).
+		Error
+}

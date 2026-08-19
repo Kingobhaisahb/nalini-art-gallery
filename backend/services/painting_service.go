@@ -178,3 +178,8 @@ func (s *PaintingService) GetNewestPaintings() ([]models.Painting, error) {
 
 	return s.PaintingRepo.GetNewestPaintings()
 }
+
+func (s *PaintingService) IncrementViews(id uint) error {
+
+	return s.PaintingRepo.IncrementViews(id)
+}

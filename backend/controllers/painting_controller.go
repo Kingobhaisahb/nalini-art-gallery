@@ -130,6 +130,18 @@ func (p *PaintingController) GetPaintingByID(c *gin.Context) {
 		return
 	}
 
+	err = p.PaintingService.IncrementViews(uint(id))
+
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"success": false,
+			"message": "Failed to update painting views",
+		})
+		return
+	}
+
+painting.Views++
+
 	imageResponses := make([]dto.PaintingImageResponse, 0, len(images))
 
 	for _, image := range images {
