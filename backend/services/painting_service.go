@@ -52,9 +52,13 @@ func (s *PaintingService) CreatePainting(req dto.CreatePaintingRequest) (*models
 
 func (s *PaintingService) GetAllPaintings(
 	featured *bool,
+	status *string,
 ) ([]models.Painting, error) {
 
-	paintings, err := s.PaintingRepo.GetAllPaintings(featured)
+	paintings, err := s.PaintingRepo.GetAllPaintings(
+		featured,
+		status,
+	)
 
 	if err != nil {
 		return nil, err

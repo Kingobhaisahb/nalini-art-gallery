@@ -15,6 +15,7 @@ func (r *PaintingRepository) CreatePainting(painting *models.Painting) error {
 
 func (r *PaintingRepository) GetAllPaintings(
 	featured *bool,
+	status *string,
 ) ([]models.Painting, error) {
 
 	var paintings []models.Painting
@@ -23,6 +24,10 @@ func (r *PaintingRepository) GetAllPaintings(
 
 	if featured != nil {
 		query = query.Where("featured = ?", *featured)
+	}
+
+	if status != nil {
+		query = query.Where("status = ?", *status)
 	}
 
 	err := query.

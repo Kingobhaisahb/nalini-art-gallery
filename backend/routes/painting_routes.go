@@ -39,6 +39,11 @@ func PaintingRoutes(router *gin.Engine) {
 	)
 
 	router.GET(
+	"/api/paintings/available",
+	paintingController.GetAvailablePaintings,
+	)
+
+	router.GET(
 		"/api/paintings/:id",
 		paintingController.GetPaintingByID,
 	)
