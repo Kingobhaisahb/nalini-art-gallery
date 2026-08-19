@@ -60,6 +60,8 @@ type PaintingResponse struct {
 
 	Views uint `json:"views"`
 
+	Images []PaintingImageResponse `json:"images"`
+
 	CreatedAt string `json:"created_at"`
 	UpdatedAt string `json:"updated_at"`
 }
@@ -70,4 +72,10 @@ type UpdateFeaturedRequest struct {
 
 type UpdatePaintingStatusRequest struct {
 	Status string `json:"status" binding:"required,oneof=AVAILABLE SOLD"`
+}
+
+type PaintingImageResponse struct {
+	ID        uint   `json:"id"`
+	ImageURL  string `json:"image_url"`
+	CreatedAt string `json:"created_at"`
 }

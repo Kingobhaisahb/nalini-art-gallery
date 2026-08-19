@@ -7,6 +7,7 @@ import (
 
 	"github.com/Kingobhaisahb/nalini-art-gallery/dto"
 	"github.com/Kingobhaisahb/nalini-art-gallery/services"
+	"github.com/Kingobhaisahb/nalini-art-gallery/repositories"
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
@@ -14,6 +15,7 @@ import (
 
 type PaintingController struct {
 	PaintingService services.PaintingService
+	PaintingImageRepo   repositories.PaintingImageRepository
 }
 
 func (p *PaintingController) CreatePainting(c *gin.Context) {
@@ -64,7 +66,7 @@ func (p *PaintingController) CreatePainting(c *gin.Context) {
 
 func (p *PaintingController) GetAllPaintings(c *gin.Context) {
 
-	paintings, err := p.PaintingService.GetAllPaintings()
+	paintings, err := p.PaintingService.GetAllPaintings(nil)
 
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
@@ -118,7 +120,7 @@ func (p *PaintingController) GetPaintingByID(c *gin.Context) {
 		return
 	}
 
-	painting, err := p.PaintingService.GetPaintingByID(uint(id))
+	painting, images, err := p.PaintingService.GetPaintingByID(uint(id))
 
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{
@@ -126,6 +128,16 @@ func (p *PaintingController) GetPaintingByID(c *gin.Context) {
 			"message": "Painting not found",
 		})
 		return
+	}
+
+	imageResponses := make([]dto.PaintingImageResponse, 0, len(images))
+
+	for _, image := range images {
+		imageResponses = append(imageResponses, dto.PaintingImageResponse{
+			ID:        image.ID,
+			ImageURL:  image.ImageURL,
+			CreatedAt: image.CreatedAt.Format("2006-01-02 15:04:05"),
+		})
 	}
 
 	c.JSON(http.StatusOK, gin.H{
@@ -145,6 +157,7 @@ func (p *PaintingController) GetPaintingByID(c *gin.Context) {
 			Tags:            painting.Tags,
 			ProcessVideoURL:  painting.ProcessVideoURL,
 			Views:           painting.Views,
+			Images: imageResponses,
 			CreatedAt:       painting.CreatedAt.Format("2006-01-02 15:04:05"),
 			UpdatedAt:       painting.UpdatedAt.Format("2006-01-02 15:04:05"),
 		},
@@ -354,3 +367,48 @@ func (p *PaintingController) UpdateStatus(c *gin.Context) {
 		"status":  req.Status,
 	})
 }
+
+func (p *PaintingController) GetFeaturedPaintings(c *gin.Context) {
+
+	featured := true
+
+	paintings, err := p.PaintingService.GetAllPaintings(&featured)
+
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"success": false,
+			"message": "Failed to fetch featured paintings",
+		})
+		return
+	}
+
+	responses := make([]dto.PaintingResponse, 0, len(paintings))
+
+	for _, painting := range paintings {
+
+		responses = append(responses, dto.PaintingResponse{
+			ID:              painting.ID,
+			Title:           painting.Title,
+			Price:           painting.Price,
+			Description:     painting.Description,
+			Category:        painting.Category,
+			Medium:          painting.Medium,
+			Width:           painting.Width,
+			Height:          painting.Height,
+			Unit:             painting.Unit,
+			Featured:        painting.Featured,
+			Status:           painting.Status,
+			Tags:             painting.Tags,
+			ProcessVideoURL:  painting.ProcessVideoURL,
+			Views:           painting.Views,
+			CreatedAt:       painting.CreatedAt.Format("2006-01-02 15:04:05"),
+			UpdatedAt:       painting.UpdatedAt.Format("2006-01-02 15:04:05"),
+		})
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"success":   true,
+		"paintings": responses,
+	})
+}
+

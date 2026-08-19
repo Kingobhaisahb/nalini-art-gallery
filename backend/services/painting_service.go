@@ -10,6 +10,7 @@ import (
 
 type PaintingService struct {
 	PaintingRepo repositories.PaintingRepository
+	PaintingImageRepo repositories.PaintingImageRepository
 }
 
 func (s *PaintingService) CreatePainting(req dto.CreatePaintingRequest) (*models.Painting, error) {
@@ -49,9 +50,11 @@ func (s *PaintingService) CreatePainting(req dto.CreatePaintingRequest) (*models
 	return &painting, nil
 }
 
-func (s *PaintingService) GetAllPaintings() ([]models.Painting, error) {
+func (s *PaintingService) GetAllPaintings(
+	featured *bool,
+) ([]models.Painting, error) {
 
-	paintings, err := s.PaintingRepo.GetAllPaintings()
+	paintings, err := s.PaintingRepo.GetAllPaintings(featured)
 
 	if err != nil {
 		return nil, err
@@ -60,15 +63,23 @@ func (s *PaintingService) GetAllPaintings() ([]models.Painting, error) {
 	return paintings, nil
 }
 
-func (s *PaintingService) GetPaintingByID(id uint) (*models.Painting, error) {
+func (s *PaintingService) GetPaintingByID(
+	id uint,
+) (*models.Painting, []models.PaintingImage, error) {
 
 	painting, err := s.PaintingRepo.GetPaintingByID(id)
 
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
-	return painting, nil
+	images, err := s.PaintingImageRepo.GetImagesByPaintingID(id)
+
+	if err != nil {
+		return nil, nil, err
+	}
+
+	return painting, images, nil
 }
 
 func (s *PaintingService) UpdatePainting(

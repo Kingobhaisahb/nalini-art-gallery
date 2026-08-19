@@ -13,21 +13,29 @@ func PaintingRoutes(router *gin.Engine) {
 
 	// Repository
 	paintingRepo := repositories.PaintingRepository{}
+	paintingImageRepo := repositories.PaintingImageRepository{}
 
 	// Service
 	paintingService := services.PaintingService{
 		PaintingRepo: paintingRepo,
+		PaintingImageRepo: paintingImageRepo,
 	}
 
 	// Controller
 	paintingController := controllers.PaintingController{
-		PaintingService: paintingService,
+		PaintingService:   paintingService,
+		PaintingImageRepo: paintingImageRepo,
 	}
 
 	// Public Painting Routes
 	router.GET(
 		"/api/paintings",
 		paintingController.GetAllPaintings,
+	)
+
+	router.GET(
+	"/api/paintings/featured",
+	paintingController.GetFeaturedPaintings,
 	)
 
 	router.GET(

@@ -92,3 +92,16 @@ func (s *PaintingImageService) GetImagesByPaintingID(
 
 	return images, nil
 }
+
+func (s *PaintingImageService) GetImages(
+	paintingID uint,
+) ([]models.PaintingImage, error) {
+
+	_, err := s.PaintingRepo.GetPaintingByID(paintingID)
+
+	if err != nil {
+		return nil, errors.New("painting not found")
+	}
+
+	return s.PaintingImageRepo.GetImagesByPaintingID(paintingID)
+}

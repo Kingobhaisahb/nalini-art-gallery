@@ -13,11 +13,19 @@ func (r *PaintingRepository) CreatePainting(painting *models.Painting) error {
 	return database.DB.Create(painting).Error
 }
 
-func (r *PaintingRepository) GetAllPaintings() ([]models.Painting, error) {
+func (r *PaintingRepository) GetAllPaintings(
+	featured *bool,
+) ([]models.Painting, error) {
 
 	var paintings []models.Painting
 
-	err := database.DB.
+	query := database.DB
+
+	if featured != nil {
+		query = query.Where("featured = ?", *featured)
+	}
+
+	err := query.
 		Order("created_at DESC").
 		Find(&paintings).Error
 
