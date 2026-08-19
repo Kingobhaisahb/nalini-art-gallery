@@ -559,3 +559,51 @@ func (p *PaintingController) SearchPaintings(c *gin.Context) {
 	})
 }
 
+func (p *PaintingController) GetPaintingsByPrice(c *gin.Context) {
+
+	order := c.Query("order")
+
+	if order == "" {
+		order = "asc"
+	}
+
+	paintings, err := p.PaintingService.GetPaintingsByPrice(order)
+
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"success": false,
+			"message": err.Error(),
+		})
+		return
+	}
+
+	responses := make([]dto.PaintingResponse, 0, len(paintings))
+
+	for _, painting := range paintings {
+
+		responses = append(responses, dto.PaintingResponse{
+			ID:             painting.ID,
+			Title:          painting.Title,
+			Price:          painting.Price,
+			Description:    painting.Description,
+			Category:       painting.Category,
+			Medium:         painting.Medium,
+			Width:          painting.Width,
+			Height:         painting.Height,
+			Unit:           painting.Unit,
+			Featured:       painting.Featured,
+			Status:         painting.Status,
+			Tags:            painting.Tags,
+			ProcessVideoURL: painting.ProcessVideoURL,
+			Views:           painting.Views,
+			CreatedAt:       painting.CreatedAt.Format("2006-01-02 15:04:05"),
+			UpdatedAt:       painting.UpdatedAt.Format("2006-01-02 15:04:05"),
+		})
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"success":   true,
+		"paintings": responses,
+	})
+}
+

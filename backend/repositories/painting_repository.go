@@ -5,6 +5,7 @@ import (
 	"github.com/Kingobhaisahb/nalini-art-gallery/models"
 
 	"gorm.io/gorm"
+	"errors"
 )
 
 type PaintingRepository struct{}
@@ -116,6 +117,27 @@ func (r *PaintingRepository) SearchPaintings(query string) ([]models.Painting, e
 			search,
 		).
 		Order("created_at DESC").
+		Find(&paintings).Error
+
+	if err != nil {
+		return nil, err
+	}
+
+	return paintings, nil
+}
+
+func (r *PaintingRepository) GetPaintingsByPrice(
+	order string,
+) ([]models.Painting, error) {
+
+	var paintings []models.Painting
+
+	if order != "asc" && order != "desc" {
+		return nil, errors.New("invalid price sort order")
+	}
+
+	err := database.DB.
+		Order("price " + order).
 		Find(&paintings).Error
 
 	if err != nil {

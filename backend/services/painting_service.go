@@ -162,3 +162,14 @@ func (s *PaintingService) SearchPaintings(query string) ([]models.Painting, erro
 
 	return s.PaintingRepo.SearchPaintings(query)
 }
+
+func (s *PaintingService) GetPaintingsByPrice(
+	order string,
+) ([]models.Painting, error) {
+
+	if order != "asc" && order != "desc" {
+		return nil, errors.New("invalid price sort order")
+	}
+
+	return s.PaintingRepo.GetPaintingsByPrice(order)
+}
