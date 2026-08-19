@@ -153,3 +153,12 @@ func (s *PaintingService) UpdateStatus(id uint, status string) error {
 
 	return s.PaintingRepo.UpdateStatus(id, status)
 }
+
+func (s *PaintingService) SearchPaintings(query string) ([]models.Painting, error) {
+
+	if query == "" {
+		return nil, errors.New("search query is required")
+	}
+
+	return s.PaintingRepo.SearchPaintings(query)
+}

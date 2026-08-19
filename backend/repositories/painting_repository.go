@@ -99,3 +99,28 @@ func (r *PaintingRepository) UpdateStatus(id uint, status string) error {
 
 	return nil
 }
+
+func (r *PaintingRepository) SearchPaintings(query string) ([]models.Painting, error) {
+
+	var paintings []models.Painting
+
+	search := "%" + query + "%"
+
+	err := database.DB.
+		Where(
+			"title LIKE ? OR description LIKE ? OR category LIKE ? OR medium LIKE ? OR tags LIKE ?",
+			search,
+			search,
+			search,
+			search,
+			search,
+		).
+		Order("created_at DESC").
+		Find(&paintings).Error
+
+	if err != nil {
+		return nil, err
+	}
+
+	return paintings, nil
+}
