@@ -173,3 +173,8 @@ func (s *PaintingService) GetPaintingsByPrice(
 
 	return s.PaintingRepo.GetPaintingsByPrice(order)
 }
+
+func (s *PaintingService) GetNewestPaintings() ([]models.Painting, error) {
+
+	return s.PaintingRepo.GetNewestPaintings()
+}

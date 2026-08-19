@@ -146,3 +146,18 @@ func (r *PaintingRepository) GetPaintingsByPrice(
 
 	return paintings, nil
 }
+
+func (r *PaintingRepository) GetNewestPaintings() ([]models.Painting, error) {
+
+	var paintings []models.Painting
+
+	err := database.DB.
+		Order("created_at DESC").
+		Find(&paintings).Error
+
+	if err != nil {
+		return nil, err
+	}
+
+	return paintings, nil
+}
