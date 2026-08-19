@@ -72,3 +72,23 @@ func (s *PaintingImageService) UploadImage(
 
 	return &image, nil
 }
+
+func (s *PaintingImageService) GetImagesByPaintingID(
+	paintingID uint,
+) ([]models.PaintingImage, error) {
+
+	// First check that the painting exists
+	_, err := s.PaintingRepo.GetPaintingByID(paintingID)
+
+	if err != nil {
+		return nil, errors.New("painting not found")
+	}
+
+	images, err := s.PaintingImageRepo.GetImagesByPaintingID(paintingID)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return images, nil
+}

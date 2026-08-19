@@ -83,3 +83,46 @@ func (p *PaintingImageController) UploadImage(c *gin.Context) {
 		"image": image,
 	})
 }
+
+func (p *PaintingImageController) GetImages(c *gin.Context) {
+
+	// Get painting ID
+	idParam := c.Param("id")
+
+	id, err := strconv.ParseUint(idParam, 10, 32)
+
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"success": false,
+			"message": "Invalid painting ID",
+		})
+		return
+	}
+
+	// Get images
+	images, err := p.PaintingImageService.GetImagesByPaintingID(
+		uint(id),
+	)
+
+	if err != nil {
+
+		if err.Error() == "painting not found" {
+			c.JSON(http.StatusNotFound, gin.H{
+				"success": false,
+				"message": "Painting not found",
+			})
+			return
+		}
+
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"success": false,
+			"message": "Failed to fetch painting images",
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"success": true,
+		"images":  images,
+	})
+}

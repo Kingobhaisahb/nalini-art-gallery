@@ -26,6 +26,12 @@ func PaintingImageRoutes(router *gin.Engine) {
 		PaintingImageService: paintingImageService,
 	}
 
+	// Public Image Route
+	router.GET(
+		"/api/paintings/:id/images",
+		paintingImageController.GetImages,
+	)
+
 	// Admin Image Routes
 	adminPaintingImages := router.Group("/api/paintings")
 
