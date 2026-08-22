@@ -55,7 +55,7 @@ func (s *OrderService) Checkout(
 		totalPrice += item.Painting.Price
 	}
 
-	var order *models.Order
+	var orderID uint
 
 	err = database.DB.Transaction(func(tx *gorm.DB) error {
 
@@ -89,10 +89,17 @@ func (s *OrderService) Checkout(
 			return err
 		}
 
-		order = &newOrder
+		orderID = newOrder.ID
 
 		return nil
 	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	// Reload order with OrderItems and Painting
+	order, err := s.OrderRepo.GetOrderByID(orderID, userID)
 
 	if err != nil {
 		return nil, err
