@@ -52,6 +52,7 @@ func main() {
 	routes.PaintingImageRoutes(router)
 	routes.PaintingVideoRoutes(router)
 	routes.CartRoutes(router)
+	routes.OrderRoutes(router)
 
 	router.GET("/", func(c *gin.Context) {
 		c.JSON(200, gin.H{
