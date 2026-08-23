@@ -1,12 +1,14 @@
 package services
 
 import (
-	"errors"
-	"gorm.io/gorm"
+    "errors"
 
-	"github.com/Kingobhaisahb/nalini-art-gallery/database"
-	"github.com/Kingobhaisahb/nalini-art-gallery/models"
-	"github.com/Kingobhaisahb/nalini-art-gallery/repositories"
+    "gorm.io/gorm"
+    "gorm.io/gorm/clause"
+
+    "github.com/Kingobhaisahb/nalini-art-gallery/database"
+    "github.com/Kingobhaisahb/nalini-art-gallery/models"
+    "github.com/Kingobhaisahb/nalini-art-gallery/repositories"
 )
 
 type OrderService struct {
@@ -40,6 +42,7 @@ func (s *OrderService) Checkout(
 
 	var totalPrice float64
 
+	// Initial availability check
 	for _, item := range cartItems {
 
 		if item.Painting.ID == 0 {
@@ -59,6 +62,36 @@ func (s *OrderService) Checkout(
 
 	err = database.DB.Transaction(func(tx *gorm.DB) error {
 
+		// Re-check and lock each painting before purchasing.
+		for _, item := range cartItems {
+
+			var painting models.Painting
+
+			err := tx.
+				Clauses(
+					clause.Locking{
+						Strength: "UPDATE",
+					},
+				).
+				First(&painting, item.PaintingID).Error
+
+			if err != nil {
+				if errors.Is(err, gorm.ErrRecordNotFound) {
+					return errors.New("painting not found")
+				}
+
+				return err
+			}
+
+			// Make sure the painting is still available.
+			if painting.Status != "AVAILABLE" {
+				return errors.New(
+					"painting is no longer available",
+				)
+			}
+		}
+
+		// Create order
 		newOrder := models.Order{
 			UserID:     userID,
 			AddressID:  addressID,
@@ -70,6 +103,7 @@ func (s *OrderService) Checkout(
 			return err
 		}
 
+		// Create order items and mark paintings as SOLD
 		for _, item := range cartItems {
 
 			orderItem := models.OrderItem{
@@ -81,8 +115,17 @@ func (s *OrderService) Checkout(
 			if err := tx.Create(&orderItem).Error; err != nil {
 				return err
 			}
+
+			// Mark painting as SOLD
+			if err := tx.
+				Model(&models.Painting{}).
+				Where("id = ? AND status = ?", item.PaintingID, "AVAILABLE").
+				Update("status", "SOLD").Error; err != nil {
+				return err
+			}
 		}
 
+		// Clear user's cart
 		if err := tx.
 			Where("user_id = ?", userID).
 			Delete(&models.Cart{}).Error; err != nil {
