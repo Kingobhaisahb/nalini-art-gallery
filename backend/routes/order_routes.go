@@ -44,6 +44,11 @@ func OrderRoutes(router *gin.Engine) {
 			orderController.GetMyOrders,
 		)
 
+		orderRoutes.PATCH(
+			"/:id/cancel",
+			orderController.CancelMyOrder,
+		)
+
 		orderRoutes.GET(
 			"/:id",
 			orderController.GetMyOrder,
@@ -66,6 +71,11 @@ func OrderRoutes(router *gin.Engine) {
 		adminOrderRoutes.GET(
 			"",
 			orderController.GetAllOrders,
+		)
+
+		adminOrderRoutes.PATCH(
+			"/:id/cancel",
+			orderController.CancelAdminOrder,
 		)
 
 		// View any order

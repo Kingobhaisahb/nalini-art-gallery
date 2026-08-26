@@ -197,3 +197,116 @@ func (s *OrderService) GetAdminOrder(
 
 	return s.OrderRepo.GetOrderByIDAdmin(orderID)
 }
+
+func (s *OrderService) CancelUserOrder(
+	orderID uint,
+	userID uint,
+) error {
+
+	return database.DB.Transaction(func(tx *gorm.DB) error {
+
+		var order models.Order
+
+		err := tx.
+			Where("id = ? AND user_id = ?", orderID, userID).
+			First(&order).Error
+
+		if err != nil {
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				return errors.New("order not found")
+			}
+
+			return err
+		}
+
+		// Customer can cancel only PENDING orders.
+		if order.Status != "PENDING" {
+			return errors.New(
+				"order cannot be cancelled after confirmation",
+			)
+		}
+
+		var items []models.OrderItem
+
+		if err := tx.
+			Where("order_id = ?", order.ID).
+			Find(&items).Error; err != nil {
+			return err
+		}
+
+		// Restore paintings to AVAILABLE.
+		for _, item := range items {
+
+			if err := tx.
+				Model(&models.Painting{}).
+				Where("id = ?", item.PaintingID).
+				Update("status", "AVAILABLE").Error; err != nil {
+				return err
+			}
+		}
+
+		// Cancel order.
+		if err := tx.
+			Model(&order).
+			Update("status", "CANCELLED").Error; err != nil {
+			return err
+		}
+
+		return nil
+	})
+}
+
+func (s *OrderService) CancelAdminOrder(
+	orderID uint,
+) error {
+
+	return database.DB.Transaction(func(tx *gorm.DB) error {
+
+		var order models.Order
+
+		err := tx.
+			Where("id = ?", orderID).
+			First(&order).Error
+
+		if err != nil {
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				return errors.New("order not found")
+			}
+
+			return err
+		}
+
+		// Already cancelled.
+		if order.Status == "CANCELLED" {
+			return errors.New("order is already cancelled")
+		}
+
+		var items []models.OrderItem
+
+		if err := tx.
+			Where("order_id = ?", order.ID).
+			Find(&items).Error; err != nil {
+			return err
+		}
+
+		// Restore all paintings belonging to this order.
+		for _, item := range items {
+
+			if err := tx.
+				Model(&models.Painting{}).
+				Where("id = ?", item.PaintingID).
+				Update("status", "AVAILABLE").Error; err != nil {
+				return err
+			}
+		}
+
+		// Cancel order.
+		if err := tx.
+			Model(&order).
+			Update("status", "CANCELLED").Error; err != nil {
+			return err
+		}
+
+		return nil
+	})
+}

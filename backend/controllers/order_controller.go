@@ -300,3 +300,100 @@ func (o *OrderController) UpdateOrderStatus(c *gin.Context) {
 		"message": "Order status updated successfully",
 	})
 }
+
+func (o *OrderController) CancelMyOrder(c *gin.Context) {
+
+	id, err := strconv.ParseUint(
+		c.Param("id"),
+		10,
+		64,
+	)
+
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"success": false,
+			"message": "Invalid order ID",
+		})
+		return
+	}
+
+	userIDValue, exists := c.Get("user_id")
+
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"success": false,
+			"message": "User not authenticated",
+		})
+		return
+	}
+
+	userID := userIDValue.(uint)
+
+	err = o.OrderService.CancelUserOrder(
+		uint(id),
+		userID,
+	)
+
+	if err != nil {
+
+		if err.Error() == "order not found" {
+			c.JSON(http.StatusNotFound, gin.H{
+				"success": false,
+				"message": err.Error(),
+			})
+			return
+		}
+
+		c.JSON(http.StatusBadRequest, gin.H{
+			"success": false,
+			"message": err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"success": true,
+		"message": "Order cancelled successfully",
+	})
+}
+
+func (o *OrderController) CancelAdminOrder(c *gin.Context) {
+
+	id, err := strconv.ParseUint(
+		c.Param("id"),
+		10,
+		64,
+	)
+
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"success": false,
+			"message": "Invalid order ID",
+		})
+		return
+	}
+
+	err = o.OrderService.CancelAdminOrder(uint(id))
+
+	if err != nil {
+
+		if err.Error() == "order not found" {
+			c.JSON(http.StatusNotFound, gin.H{
+				"success": false,
+				"message": err.Error(),
+			})
+			return
+		}
+
+		c.JSON(http.StatusBadRequest, gin.H{
+			"success": false,
+			"message": err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"success": true,
+		"message": "Order cancelled successfully",
+	})
+}
