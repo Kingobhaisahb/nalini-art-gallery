@@ -61,3 +61,35 @@ func (r *OrderRepository) UpdateOrderStatus(
 		Where("id = ?", orderID).
 		Update("status", status).Error
 }
+
+func (r *OrderRepository) GetAllOrders() ([]models.Order, error) {
+
+	var orders []models.Order
+
+	err := database.DB.
+		Preload("OrderItems").
+		Preload("OrderItems.Painting").
+		Order("created_at DESC").
+		Find(&orders).Error
+
+	return orders, err
+}
+
+func (r *OrderRepository) GetOrderByIDAdmin(
+	orderID uint,
+) (*models.Order, error) {
+
+	var order models.Order
+
+	err := database.DB.
+		Preload("OrderItems").
+		Preload("OrderItems.Painting").
+		Where("id = ?", orderID).
+		First(&order).Error
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &order, nil
+}

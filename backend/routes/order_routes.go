@@ -23,6 +23,10 @@ func OrderRoutes(router *gin.Engine) {
 		OrderService: orderService,
 	}
 
+	// =========================
+	// CUSTOMER ORDER ROUTES
+	// =========================
+
 	orderRoutes := router.Group("/api/orders")
 
 	orderRoutes.Use(
@@ -30,22 +34,50 @@ func OrderRoutes(router *gin.Engine) {
 	)
 
 	{
-		// Checkout / create order
 		orderRoutes.POST(
 			"/checkout",
 			orderController.Checkout,
 		)
 
-		// Customer order history
 		orderRoutes.GET(
 			"",
 			orderController.GetMyOrders,
 		)
 
-		// Customer single order
 		orderRoutes.GET(
 			"/:id",
 			orderController.GetMyOrder,
+		)
+	}
+
+	// =========================
+	// ADMIN ORDER ROUTES
+	// =========================
+
+	adminOrderRoutes := router.Group("/api/admin/orders")
+
+	adminOrderRoutes.Use(
+		middleware.JWTMiddleware(),
+		middleware.AdminMiddleware(),
+	)
+
+	{
+		// View all orders
+		adminOrderRoutes.GET(
+			"",
+			orderController.GetAllOrders,
+		)
+
+		// View any order
+		adminOrderRoutes.GET(
+			"/:id",
+			orderController.GetAdminOrder,
+		)
+
+		// Update order status
+		adminOrderRoutes.PATCH(
+			"/:id/status",
+			orderController.UpdateOrderStatus,
 		)
 	}
 }

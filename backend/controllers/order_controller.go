@@ -185,3 +185,118 @@ func buildOrderResponse(
 		UpdatedAt:  order.UpdatedAt.Format("2006-01-02 15:04:05"),
 	}
 }
+
+func (o *OrderController) GetAllOrders(c *gin.Context) {
+
+	orders, err := o.OrderService.GetAllOrders()
+
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"success": false,
+			"message": "Failed to fetch orders",
+		})
+		return
+	}
+
+	responses := make([]dto.OrderResponse, 0, len(orders))
+
+	for _, order := range orders {
+		responses = append(
+			responses,
+			buildOrderResponse(&order),
+		)
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"success": true,
+		"orders":  responses,
+	})
+}
+
+func (o *OrderController) GetAdminOrder(c *gin.Context) {
+
+	id, err := strconv.ParseUint(
+		c.Param("id"),
+		10,
+		64,
+	)
+
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"success": false,
+			"message": "Invalid order ID",
+		})
+		return
+	}
+
+	order, err := o.OrderService.GetAdminOrder(uint(id))
+
+	if err != nil {
+
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			c.JSON(http.StatusNotFound, gin.H{
+				"success": false,
+				"message": "Order not found",
+			})
+			return
+		}
+
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"success": false,
+			"message": "Failed to fetch order",
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"success": true,
+		"order":   buildOrderResponse(order),
+	})
+}
+
+func (o *OrderController) UpdateOrderStatus(c *gin.Context) {
+
+	id, err := strconv.ParseUint(
+		c.Param("id"),
+		10,
+		64,
+	)
+
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"success": false,
+			"message": "Invalid order ID",
+		})
+		return
+	}
+
+	var req struct {
+		Status string `json:"status" binding:"required"`
+	}
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"success": false,
+			"message": "Status is required",
+		})
+		return
+	}
+
+	err = o.OrderService.UpdateOrderStatus(
+		uint(id),
+		req.Status,
+	)
+
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"success": false,
+			"message": err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"success": true,
+		"message": "Order status updated successfully",
+	})
+}

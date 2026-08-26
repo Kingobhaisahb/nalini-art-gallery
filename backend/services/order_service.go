@@ -185,3 +185,15 @@ func (s *OrderService) UpdateOrderStatus(
 
 	return s.OrderRepo.UpdateOrderStatus(orderID, status)
 }
+
+func (s *OrderService) GetAllOrders() ([]models.Order, error) {
+
+	return s.OrderRepo.GetAllOrders()
+}
+
+func (s *OrderService) GetAdminOrder(
+	orderID uint,
+) (*models.Order, error) {
+
+	return s.OrderRepo.GetOrderByIDAdmin(orderID)
+}
