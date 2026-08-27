@@ -57,3 +57,35 @@ func (r *UserRepository) DeleteUser(id uint) error {
 	return database.DB.Delete(&models.User{}, id).Error
 }
 
+func (r *UserRepository) GetAllUsers() ([]models.User, error) {
+
+	var users []models.User
+
+	err := database.DB.
+		Order("created_at DESC").
+		Find(&users).Error
+
+	return users, err
+}
+
+func (r *UserRepository) UpdateUserRole(
+	id uint,
+	role string,
+) error {
+
+	result := database.DB.
+		Model(&models.User{}).
+		Where("id = ?", id).
+		Update("role", role)
+
+	if result.Error != nil {
+		return result.Error
+	}
+
+	if result.RowsAffected == 0 {
+		return gorm.ErrRecordNotFound
+	}
+
+	return nil
+}
+
