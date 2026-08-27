@@ -183,3 +183,8 @@ func (s *PaintingService) IncrementViews(id uint) error {
 
 	return s.PaintingRepo.IncrementViews(id)
 }
+
+func (s *PaintingService) GetAllPaintingsForAdmin() ([]models.Painting, error) {
+
+	return s.PaintingRepo.GetAllPaintingsForAdmin()
+}

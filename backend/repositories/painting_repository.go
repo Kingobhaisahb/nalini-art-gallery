@@ -170,3 +170,19 @@ func (r *PaintingRepository) IncrementViews(id uint) error {
 		UpdateColumn("views", gorm.Expr("views + ?", 1)).
 		Error
 }
+
+func (r *PaintingRepository) GetAllPaintingsForAdmin() ([]models.Painting, error) {
+
+	var paintings []models.Painting
+
+	err := database.DB.
+		Unscoped().
+		Order("created_at DESC").
+		Find(&paintings).Error
+
+	if err != nil {
+		return nil, err
+	}
+
+	return paintings, nil
+}

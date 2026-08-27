@@ -69,7 +69,7 @@ func PaintingRoutes(router *gin.Engine) {
 	)
 
 	// Admin Painting Routes
-	adminPaintings := router.Group("/api/paintings")
+	adminPaintings := router.Group("/api/admin/paintings")
 
 	adminPaintings.Use(
 		middleware.JWTMiddleware(),
@@ -85,6 +85,11 @@ func PaintingRoutes(router *gin.Engine) {
 		adminPaintings.PUT(
 			"/:id",
 			paintingController.UpdatePainting,
+		)
+
+		adminPaintings.GET(
+			"",
+			paintingController.GetAdminPaintings,
 		)
 
 		adminPaintings.DELETE(

@@ -79,3 +79,27 @@ type PaintingImageResponse struct {
 	ImageURL  string `json:"image_url"`
 	CreatedAt string `json:"created_at"`
 }
+
+type AdminPaintingResponse struct {
+	ID              uint    `json:"id"`
+	Title           string  `json:"title"`
+	Price           float64 `json:"price"`
+	Description     string  `json:"description"`
+	Category        string  `json:"category"`
+	Medium          string  `json:"medium"`
+	Width           float64 `json:"width"`
+	Height          float64 `json:"height"`
+	Unit            string  `json:"unit"`
+	Featured        bool    `json:"featured"`
+	Status          string  `json:"status"`
+	ProcessVideoURL *string `json:"process_video_url,omitempty"`
+	Views           uint    `json:"views"`
+	Tags            string  `json:"tags"`
+	CreatedAt       string  `json:"created_at"`
+	UpdatedAt       string  `json:"updated_at"`
+
+	// Sales information
+	Sold            bool    `json:"sold"`
+	SoldOrderID     *uint   `json:"sold_order_id,omitempty"`
+	SoldPrice       *float64 `json:"sold_price,omitempty"`
+}
