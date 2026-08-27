@@ -47,6 +47,7 @@ func main() {
 		},
 	}))
 
+	routes.DashboardRoutes(router)
 	routes.AuthRoutes(router)
 	routes.PaintingRoutes(router)
 	routes.PaintingImageRoutes(router)
