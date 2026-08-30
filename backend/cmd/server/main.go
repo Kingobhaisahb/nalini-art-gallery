@@ -55,6 +55,7 @@ func main() {
 	routes.CartRoutes(router)
 	routes.OrderRoutes(router)
 	routes.UserRoutes(router)
+	routes.PaymentRoutes(router)
 
 	router.GET("/", func(c *gin.Context) {
 		c.JSON(200, gin.H{

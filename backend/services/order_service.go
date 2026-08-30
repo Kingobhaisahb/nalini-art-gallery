@@ -12,17 +12,18 @@ import (
 )
 
 type OrderService struct {
-	OrderRepo repositories.OrderRepository
-	CartRepo  repositories.CartRepository
+	OrderRepo     repositories.OrderRepository
+	CartRepo      repositories.CartRepository
+	PaymentService *PaymentService
 }
 
 func (s *OrderService) Checkout(
 	userID uint,
 	addressID uint,
-) (*models.Order, error) {
+) (*models.Order, *models.Payment, error) {
 
 	if addressID == 0 {
-		return nil, errors.New("address is required")
+		return nil, nil, errors.New("address is required")
 	}
 
 	var cartItems []models.Cart
@@ -33,24 +34,24 @@ func (s *OrderService) Checkout(
 		Find(&cartItems).Error
 
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	if len(cartItems) == 0 {
-		return nil, errors.New("cart is empty")
+		return nil, nil, errors.New("cart is empty")
 	}
 
 	var totalPrice float64
 
-	// Initial availability check
+	// Check that all paintings are available.
 	for _, item := range cartItems {
 
 		if item.Painting.ID == 0 {
-			return nil, errors.New("painting not found")
+			return nil, nil, errors.New("painting not found")
 		}
 
 		if item.Painting.Status != "AVAILABLE" {
-			return nil, errors.New(
+			return nil, nil, errors.New(
 				"painting is no longer available",
 			)
 		}
@@ -62,7 +63,7 @@ func (s *OrderService) Checkout(
 
 	err = database.DB.Transaction(func(tx *gorm.DB) error {
 
-		// Re-check and lock each painting before purchasing.
+		// Re-check and lock each painting before creating the order.
 		for _, item := range cartItems {
 
 			var painting models.Painting
@@ -83,7 +84,6 @@ func (s *OrderService) Checkout(
 				return err
 			}
 
-			// Make sure the painting is still available.
 			if painting.Status != "AVAILABLE" {
 				return errors.New(
 					"painting is no longer available",
@@ -91,7 +91,7 @@ func (s *OrderService) Checkout(
 			}
 		}
 
-		// Create order
+		// Create order.
 		newOrder := models.Order{
 			UserID:     userID,
 			AddressID:  addressID,
@@ -103,7 +103,8 @@ func (s *OrderService) Checkout(
 			return err
 		}
 
-		// Create order items and mark paintings as SOLD
+		// Create order items.
+		// DO NOT mark paintings SOLD yet.
 		for _, item := range cartItems {
 
 			orderItem := models.OrderItem{
@@ -115,17 +116,9 @@ func (s *OrderService) Checkout(
 			if err := tx.Create(&orderItem).Error; err != nil {
 				return err
 			}
-
-			// Mark painting as SOLD
-			if err := tx.
-				Model(&models.Painting{}).
-				Where("id = ? AND status = ?", item.PaintingID, "AVAILABLE").
-				Update("status", "SOLD").Error; err != nil {
-				return err
-			}
 		}
 
-		// Clear user's cart
+		// Clear user's cart.
 		if err := tx.
 			Where("user_id = ?", userID).
 			Delete(&models.Cart{}).Error; err != nil {
@@ -138,17 +131,24 @@ func (s *OrderService) Checkout(
 	})
 
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
-	// Reload order with OrderItems and Painting
+	// Reload order with OrderItems and Painting.
 	order, err := s.OrderRepo.GetOrderByID(orderID, userID)
 
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
-	return order, nil
+	// Create Razorpay payment order and Payment DB record.
+	payment, err := s.PaymentService.CreatePayment(order)
+
+	if err != nil {
+		return nil, nil, err
+	}
+
+	return order, payment, nil
 }
 
 func (s *OrderService) GetUserOrders(

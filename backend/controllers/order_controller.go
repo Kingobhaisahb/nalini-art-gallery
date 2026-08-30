@@ -41,7 +41,7 @@ func (o *OrderController) Checkout(c *gin.Context) {
 
 	userID := userIDValue.(uint)
 
-	order, err := o.OrderService.Checkout(
+	order, payment, err := o.OrderService.Checkout(
 		userID,
 		req.AddressID,
 	)
@@ -57,7 +57,16 @@ func (o *OrderController) Checkout(c *gin.Context) {
 	c.JSON(http.StatusCreated, gin.H{
 		"success": true,
 		"message": "Checkout successful",
-		"order":   buildOrderResponse(order),
+
+		"order": buildOrderResponse(order),
+
+		"payment": dto.CreatePaymentOrderResponse{
+			OrderID:         payment.OrderID,
+			RazorpayOrderID: payment.RazorpayOrderID,
+			Amount:          payment.Amount,
+			Currency:        payment.Currency,
+			Status:          payment.Status,
+		},
 	})
 }
 

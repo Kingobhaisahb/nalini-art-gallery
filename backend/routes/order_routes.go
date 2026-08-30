@@ -13,10 +13,19 @@ func OrderRoutes(router *gin.Engine) {
 
 	orderRepo := repositories.OrderRepository{}
 	cartRepo := repositories.CartRepository{}
+	paymentRepo := repositories.PaymentRepository{}
+
+	razorpayService := services.NewRazorpayService()
+
+	paymentService := services.PaymentService{
+		PaymentRepo:     paymentRepo,
+		RazorpayService: razorpayService,
+	}
 
 	orderService := services.OrderService{
-		OrderRepo: orderRepo,
-		CartRepo:  cartRepo,
+		OrderRepo:      orderRepo,
+		CartRepo:       cartRepo,
+		PaymentService: &paymentService,
 	}
 
 	orderController := controllers.OrderController{
@@ -73,6 +82,7 @@ func OrderRoutes(router *gin.Engine) {
 			orderController.GetAllOrders,
 		)
 
+		// Cancel order
 		adminOrderRoutes.PATCH(
 			"/:id/cancel",
 			orderController.CancelAdminOrder,
