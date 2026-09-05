@@ -2,18 +2,18 @@ package services
 
 import (
 	"errors"
-	"os"
 	"fmt"
+	"os"
 
-	razorpayutils "github.com/razorpay/razorpay-go/utils"
 	"github.com/Kingobhaisahb/nalini-art-gallery/database"
 	"github.com/Kingobhaisahb/nalini-art-gallery/models"
 	"github.com/Kingobhaisahb/nalini-art-gallery/repositories"
+	razorpayutils "github.com/razorpay/razorpay-go/utils"
 	"gorm.io/gorm"
 )
 
 type PaymentService struct {
-	PaymentRepo   repositories.PaymentRepository
+	PaymentRepo     repositories.PaymentRepository
 	RazorpayService *RazorpayService
 }
 
@@ -91,12 +91,34 @@ func (s *PaymentService) VerifyPayment(
 		return err
 	}
 
-	// Already verified.
+	// If payment was already verified, make sure the paintings
+	// are also marked as SOLD.
 	if payment.Status == "SUCCESS" {
-		return nil
+		return database.DB.Transaction(func(tx *gorm.DB) error {
+
+			var orderItems []models.OrderItem
+
+			if err := tx.
+				Where("order_id = ?", orderID).
+				Find(&orderItems).Error; err != nil {
+				return err
+			}
+
+			for _, item := range orderItems {
+
+				if err := tx.
+					Model(&models.Painting{}).
+					Where("id = ?", item.PaintingID).
+					Update("status", "SOLD").Error; err != nil {
+					return err
+				}
+			}
+
+			return nil
+		})
 	}
 
-	// Make sure the Razorpay order ID matches our database.
+	// Make sure the Razorpay order ID exists.
 	if payment.RazorpayOrderID == "" {
 		return errors.New("razorpay order ID missing")
 	}
@@ -124,10 +146,10 @@ func (s *PaymentService) VerifyPayment(
 		return errors.New("invalid razorpay signature")
 	}
 
-	// Update payment + order together.
+	// Update payment, order, and paintings together.
 	return database.DB.Transaction(func(tx *gorm.DB) error {
 
-		// Mark payment successful.
+		// 1. Mark payment successful.
 		if err := tx.
 			Model(&models.Payment{}).
 			Where("id = ?", payment.ID).
@@ -139,12 +161,32 @@ func (s *PaymentService) VerifyPayment(
 			return err
 		}
 
-		// Payment successful → confirm order.
+		// 2. Payment successful → confirm order.
 		if err := tx.
 			Model(&models.Order{}).
 			Where("id = ?", orderID).
 			Update("status", "CONFIRMED").Error; err != nil {
 			return err
+		}
+
+		// 3. Get all paintings belonging to this order.
+		var orderItems []models.OrderItem
+
+		if err := tx.
+			Where("order_id = ?", orderID).
+			Find(&orderItems).Error; err != nil {
+			return err
+		}
+
+		// 4. Mark every purchased painting as SOLD.
+		for _, item := range orderItems {
+
+			if err := tx.
+				Model(&models.Painting{}).
+				Where("id = ?", item.PaintingID).
+				Update("status", "SOLD").Error; err != nil {
+				return err
+			}
 		}
 
 		return nil
